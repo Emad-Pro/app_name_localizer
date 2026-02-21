@@ -1,4 +1,7 @@
-include: package:flutter_lints/flutter.yaml
+include: package:lints/recommended.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+linter:
+  rules:
+    - prefer_const_constructors
+    - avoid_print: false # نحتاجه لأن أداتك تعتمد على الطباعة في التيرمينال
+    - prefer_final_fields

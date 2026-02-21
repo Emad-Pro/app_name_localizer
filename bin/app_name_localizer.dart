@@ -5,10 +5,19 @@ import 'package:app_name_localizer/src/ios_processor.dart';
 import 'package:app_name_localizer/src/utils.dart';
 import 'package:app_name_localizer/src/version_reader.dart';
 
-// Define the current version of your package
-
-void main(List<String> args) async {
+/// The main entry point for the **App Name Localizer Pro** CLI tool.
+///
+/// This script orchestrates the entire localization process by:
+/// 1. Handling CLI arguments and flags.
+/// 2. Loading the configuration from `pubspec.yaml`.
+/// 3. Determining the target platform through flags or interactive menu.
+/// 4. Executing the Android and iOS processors.
+///
+/// Run this using: `dart run app_name_localizer`
+Future<void> main(List<String> args) async {
+  // Retrieve the current package version dynamically from pubspec.yaml
   final String currentVersion = await VersionReader.getVersion();
+
   // 1. Handle standard CLI flags (Help & Version) early
   if (args.contains('-h') || args.contains('--help')) {
     _printHelp(currentVersion);
@@ -19,40 +28,38 @@ void main(List<String> args) async {
     return;
   }
 
-  // 1. Handle standard CLI flags (Help & Version) early
-  if (args.contains('-h') || args.contains('--help')) {
-    _printHelp(currentVersion); // نمرر الإصدار لدالة المساعدة
-    return;
-  }
-  if (args.contains('-v') || args.contains('--version')) {
-    Utils.log("🌍 App Name Localizer Pro v$currentVersion");
-    return;
-  }
-
+  // Display the branding banner
   print("\n");
   Utils.log("╔══════════════════════════════════════════════╗");
   Utils.log("║    🌍 App Name Localizer Pro v$currentVersion          ║");
   Utils.log("║    👨‍💻 Developed with ❤️ by Emad Younis (EA)  ║");
   Utils.log("╚══════════════════════════════════════════════╝");
   print("");
+
   try {
-    // 2. Load Configuration
+    // 2. Load Configuration from pubspec.yaml
     Utils.log("📂 Reading configuration file...", success: false);
     final config = ConfigReader.loadConfig();
 
     if (config == null || config.isEmpty) {
       Utils.log("❌ No languages found in configuration.", error: true);
-      Utils.log("👉 Please ensure 'app_name_localizer' is properly defined in your pubspec.yaml.");
+      Utils.log(
+        "👉 Please ensure 'app_name_localizer' is properly defined in your pubspec.yaml.",
+      );
       exit(1);
     }
 
-    Utils.log("✅ Found ${config.length} languages: ${config.keys.join(', ')}", success: true);
+    Utils.log(
+      "✅ Found ${config.length} languages: ${config.keys.join(', ')}",
+      success: true,
+    );
     _printSeparator();
 
     // 3. Determine Target Platforms (Logic Unit)
     bool processAndroid = true;
     bool processIos = true;
 
+    // Check for platform-specific flags
     if (args.contains('-a') || args.contains('--android')) {
       Utils.log("🚀 Mode: Android Only (detected via flags)");
       processIos = false;
@@ -60,13 +67,16 @@ void main(List<String> args) async {
       Utils.log("🚀 Mode: iOS Only (detected via flags)");
       processAndroid = false;
     } else {
-      // Interactive mode for terminal users
+      // Interactive mode: Prompt the user to choose platforms manually
       Utils.log("❓ Which platform(s) would you like to update?");
       Utils.log("   [1] Android only");
       Utils.log("   [2] iOS only");
       Utils.log("   [3] Both (Default)");
 
-      String answer = Utils.askUser("👉 Select an option (1/2/3):", defaultValue: "3").trim();
+      String answer = Utils.askUser(
+        "👉 Select an option (1/2/3):",
+        defaultValue: "3",
+      ).trim();
 
       switch (answer) {
         case "1":
@@ -82,17 +92,18 @@ void main(List<String> args) async {
         case "":
           break;
         default:
-          processIos = false;
-          processIos = false;
-          Utils.log("\n❌ Invalid input: '$answer'. Please select 1, 2, or 3.", error: true);
+          Utils.log(
+            "\n❌ Invalid input: '$answer'. Please select 1, 2, or 3.",
+            error: true,
+          );
           Utils.log("🚫 Operation aborted. No changes were made.");
-          exit(1); // Use 1 for error exit code
+          exit(1);
       }
     }
 
     _printSeparator();
 
-    // 4. Execute Localization
+    // 4. Execute Android Localization
     if (processAndroid) {
       Utils.log("⚙️  Processing Android...", success: false);
       AndroidProcessor.process(config);
@@ -104,6 +115,7 @@ void main(List<String> args) async {
 
     _printSeparator();
 
+    // 5. Execute iOS Localization
     if (processIos) {
       Utils.log("⚙️  Processing iOS...", success: false);
       IosProcessor.process(config);
@@ -114,7 +126,7 @@ void main(List<String> args) async {
 
     _printSeparator();
 
-    // 5. Success Banner
+    // 6. Success Banner and instructions
     Utils.log("🎉 SUCCESS! App names localized successfully.", success: true);
     Utils.log("👉 Next Step: Run 'flutter clean' && 'flutter run'");
     print("\n");
@@ -124,17 +136,21 @@ void main(List<String> args) async {
   }
 }
 
-/// Helper method to print a consistent visual separator
+/// Helper method to print a consistent visual separator in the terminal.
 void _printSeparator() {
   print("--------------------------------------------");
 }
 
-/// Helper method to display CLI usage instructions
-/// Helper method to display CLI usage instructions
-_printHelp(String version) {
+/// Helper method to display CLI usage instructions and developer credits.
+///
+/// The [version] parameter is used to show the current package version
+/// in the help header.
+void _printHelp(String version) {
   print("\n🌍 App Name Localizer Pro v$version");
   print("👨‍💻 Developed by Emad Younis (EA) | ✉️ emadeadev@gmail.com\n");
-  print("A powerful tool to easily localize your Flutter app name for iOS and Android.\n");
+  print(
+    "A powerful tool to easily localize your Flutter app name for iOS and Android.\n",
+  );
   print("Usage: dart run app_name_localizer [arguments]\n");
   print("Options:");
   print("  -a, --android    Update Android app name only.");
