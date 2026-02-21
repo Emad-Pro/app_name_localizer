@@ -17,9 +17,7 @@ class VersionReader {
   static Future<String> getVersion() async {
     try {
       // Resolving the library URI to find the physical path on the user's machine
-      final uri = await Isolate.resolvePackageUri(
-        Uri.parse('package:app_name_localizer/'),
-      );
+      final uri = await Isolate.resolvePackageUri(Uri.parse('package:app_name_localizer/'));
 
       if (uri != null) {
         // Moving up from 'lib/' to the root directory to find pubspec.yaml
@@ -30,21 +28,18 @@ class VersionReader {
           final content = file.readAsStringSync();
 
           // Regex to capture the version value after the 'version:' key
-          final match = RegExp(
-            r'^version:\s*(.*)$',
-            multiLine: true,
-          ).firstMatch(content);
+          final match = RegExp(r'^version:\s*(.*)$', multiLine: true).firstMatch(content);
           if (match != null) {
             return match.group(1)?.trim() ?? 'Unknown';
           }
         }
       }
     } catch (e) {
-      return '1.0.1';
+      return '1.0.2';
       // If resolution fails (e.g., during local development without pub get),
       // the error is caught to prevent the CLI from crashing.
     }
 
-    return '1.0.1'; // Fallback version (Update this whenever you bump version)
+    return '1.0.2'; // Fallback version (Update this whenever you bump version)
   }
 }

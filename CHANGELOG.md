@@ -16,3 +16,8 @@
 * 🔗 **Metadata:** Corrected repository and homepage URLs in `pubspec.yaml`.
 * 📁 **Example:** Added an official example directory to demonstrate usage.
 * ⚡ **Optimization:** Removed unnecessary Flutter dependencies to make the package "Pure Dart".
+
+
+## 1.0.2
+
+* 🚀 **Platform Support:** Officially restricted package tags to Android and iOS only to reflect intended CLI usage for mobile projects.
