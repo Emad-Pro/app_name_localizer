@@ -1,0 +1,20 @@
+name: app_name_localizer
+description: A powerful CLI tool to easily and automatically localize your Flutter app name for iOS and Android without manual configuration.
+version: 1.0.0
+homepage: https://github.com/Emad-Pro/app_name_localizer
+repository: https://github.com/Emad-Pro/app_name_localizer
+issue_tracker: https://github.com/Emad-Pro/app_name_localizer/issues
+
+executables:
+  app_name_localizer: app_name_localizer
+
+environment:
+  sdk: '>=3.10.7 <4.0.0'
+
+dependencies:
+  yaml: ^3.1.3
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.24.0
+  lints: ^3.0.0
