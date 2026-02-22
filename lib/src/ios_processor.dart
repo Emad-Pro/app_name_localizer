@@ -56,6 +56,7 @@ class IosProcessor {
   /// This involves identifying or creating a `PBXVariantGroup` for `InfoPlist.strings`,
   /// adding language-specific children to that group, and updating `knownRegions`.
   static void _updatePbxProject(String projectPath, List<String> languages) {
+    // 👈 إنت هنا عامل Backup أصلاً، عظيم جداً!
     Utils.backupFile(projectPath);
     File projectFile = File(projectPath);
     if (!projectFile.existsSync()) return;
@@ -63,9 +64,7 @@ class IosProcessor {
     String content = projectFile.readAsStringSync();
 
     String variantGroupUUID;
-    RegExp variantGroupRegex = RegExp(
-      r'([A-F0-9]{24}) /\* InfoPlist.strings \*/ = \{',
-    );
+    RegExp variantGroupRegex = RegExp(r'([A-F0-9]{24}) /\* InfoPlist.strings \*/ = \{');
     Match? match = variantGroupRegex.firstMatch(content);
 
     if (match != null) {
@@ -84,10 +83,7 @@ class IosProcessor {
     // Update the knownRegions section in Xcode
     for (String lang in languages) {
       if (!content.contains(RegExp(r'\s' + lang + r','))) {
-        content = content.replaceFirst(
-          'knownRegions = (',
-          'knownRegions = (\n\t\t\t\t$lang,',
-        );
+        content = content.replaceFirst('knownRegions = (', 'knownRegions = (\n\t\t\t\t$lang,');
       }
     }
 
@@ -105,8 +101,7 @@ class IosProcessor {
 
     // Check for existing PBXBuildFile entry for this resource
     RegExp buildFileRegex = RegExp(
-      r'([A-F0-9]{24})\s*/\*.*?\*/\s*=\s*\{isa\s*=\s*PBXBuildFile;\s*fileRef\s*=\s*' +
-          RegExp.escape(fileRefUUID),
+      r'([A-F0-9]{24})\s*/\*.*?\*/\s*=\s*\{isa\s*=\s*PBXBuildFile;\s*fileRef\s*=\s*' + RegExp.escape(fileRefUUID),
     );
     Match? match = buildFileRegex.firstMatch(content);
 
@@ -116,12 +111,9 @@ class IosProcessor {
     } else {
       print("   ⚙️ Creating new PBXBuildFile definition...");
       buildFileUUID = _generateUUID();
-      String buildFileEntry =
-          '\t\t$buildFileUUID = {isa = PBXBuildFile; fileRef = $fileRefUUID; };\n';
+      String buildFileEntry = '\t\t$buildFileUUID = {isa = PBXBuildFile; fileRef = $fileRefUUID; };\n';
 
-      int buildSectionStart = content.indexOf(
-        '/* Begin PBXBuildFile section */',
-      );
+      int buildSectionStart = content.indexOf('/* Begin PBXBuildFile section */');
       if (buildSectionStart != -1) {
         int insertPos = content.indexOf('\n', buildSectionStart) + 1;
         content = content.replaceRange(insertPos, insertPos, buildFileEntry);
@@ -144,14 +136,11 @@ class IosProcessor {
       if (filesStart != -1 && filesEnd != -1) {
         String filesBlock = content.substring(filesStart, filesEnd);
 
-        if (filesBlock.contains('Assets.xcassets') ||
-            filesBlock.contains('LaunchScreen')) {
+        if (filesBlock.contains('Assets.xcassets') || filesBlock.contains('LaunchScreen')) {
           targetFilesIndex = filesStart;
 
           if (filesBlock.contains(buildFileUUID)) {
-            print(
-              "   ✅ InfoPlist.strings is valid and linked. No action needed.",
-            );
+            print("   ✅ InfoPlist.strings is valid and linked. No action needed.");
             return content;
           }
           break;
@@ -172,11 +161,7 @@ class IosProcessor {
   }
 
   /// Adds language-specific `PBXFileReference` entries to a `PBXVariantGroup`.
-  static String _addChildrenToVariantGroup(
-    String content,
-    String parentUUID,
-    List<String> languages,
-  ) {
+  static String _addChildrenToVariantGroup(String content, String parentUUID, List<String> languages) {
     String startMarker = '$parentUUID = {';
     int startIndex = content.indexOf(startMarker);
     if (startIndex == -1) return content;
@@ -185,10 +170,7 @@ class IosProcessor {
     int childrenEnd = content.indexOf(');', childrenStart);
     if (childrenStart == -1 || childrenEnd == -1) return content;
 
-    String existingChildrenBlock = content.substring(
-      childrenStart,
-      childrenEnd,
-    );
+    String existingChildrenBlock = content.substring(childrenStart, childrenEnd);
     String newChildrenLines = "";
     String newFileRefLines = "";
     bool changesMade = false;
@@ -206,14 +188,8 @@ class IosProcessor {
     }
 
     if (changesMade) {
-      content = content.replaceRange(
-        childrenEnd,
-        childrenEnd,
-        newChildrenLines,
-      );
-      int refSectionStart = content.indexOf(
-        '/* Begin PBXFileReference section */',
-      );
+      content = content.replaceRange(childrenEnd, childrenEnd, newChildrenLines);
+      int refSectionStart = content.indexOf('/* Begin PBXFileReference section */');
       if (refSectionStart != -1) {
         int insertPos = content.indexOf('\n', refSectionStart) + 1;
         content = content.replaceRange(insertPos, insertPos, newFileRefLines);
@@ -223,9 +199,7 @@ class IosProcessor {
   }
 
   /// Creates a new `PBXVariantGroup` for `InfoPlist.strings` if it doesn't exist.
-  static ({String content, String id}) _createInfoPlistVariantGroup(
-    String content,
-  ) {
+  static ({String content, String id}) _createInfoPlistVariantGroup(String content) {
     String newUUID = _generateUUID();
     RegExp infoPlistRegex = RegExp(r'([A-F0-9]{24}) /\* Info.plist \*/,');
     Match? match = infoPlistRegex.firstMatch(content);
@@ -249,8 +223,7 @@ class IosProcessor {
       int insertPos = content.indexOf('\n', sectionStart) + 1;
       content = content.replaceRange(insertPos, insertPos, groupDefinition);
     } else {
-      String newSection =
-          '\n/* Begin PBXVariantGroup section */\n$groupDefinition/* End PBXVariantGroup section */\n';
+      String newSection = '\n/* Begin PBXVariantGroup section */\n$groupDefinition/* End PBXVariantGroup section */\n';
       int lastBrace = content.lastIndexOf('}');
       content = content.replaceRange(lastBrace, lastBrace, newSection);
     }
@@ -269,6 +242,10 @@ class IosProcessor {
       if (lastDictIndex != -1) {
         String newContent =
             '${content.substring(0, lastDictIndex)}\t<key>LSHasLocalizedDisplayName</key>\n\t<true/>\n${content.substring(lastDictIndex)}';
+
+        // 👈 أضفنا أخذ النسخة الاحتياطية قبل الحفظ هنا
+        Utils.backupFile(infoPlistFile.path);
+
         infoPlistFile.writeAsStringSync(newContent);
         print("   ✅ Enabled LSHasLocalizedDisplayName.");
       }
@@ -286,5 +263,16 @@ class IosProcessor {
       uuid += hexDigits[random.nextInt(16)];
     }
     return uuid;
+  }
+
+  /// Reverts all localization changes made to the iOS project.
+  ///
+  /// This method restores the `project.pbxproj` and `Info.plist` files
+  /// from their `.bak` backups, effectively removing all injected localizations.
+  static void revert() {
+    print("⏪ Reverting iOS changes...");
+    Utils.restoreBackup('ios/Runner.xcodeproj/project.pbxproj');
+    Utils.restoreBackup('ios/Runner/Info.plist');
+    print("   ✅ iOS revert complete.");
   }
 }

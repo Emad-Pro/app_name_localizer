@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app_name_localizer/src/utils.dart'; // تأكد من مسار الاستدعاء الصحيح للـ Utils
 
 /// A utility class responsible for processing and validating Android-specific localization.
 ///
@@ -21,32 +22,27 @@ class AndroidProcessor {
 
     // Check if the manifest already uses the string resource for the app label
     if (!content.contains('android:label="@string/app_name"')) {
-      print(
-        '\x1B[33m⚠️ Warning: Your AndroidManifest.xml does not seem to use @string/app_name.\x1B[0m',
-      );
+      print('\x1B[33m⚠️ Warning: Your AndroidManifest.xml does not seem to use @string/app_name.\x1B[0m');
       print('\x1B[36m🔧 Fixing it automatically...\x1B[0m');
 
       // Regex to find the <application> tag and its android:label attribute
-      final RegExp appLabelRegex = RegExp(
-        r'(<application[^>]*?)android:label="[^"]*"',
-      );
+      final RegExp appLabelRegex = RegExp(r'(<application[^>]*?)android:label="[^"]*"');
 
       if (appLabelRegex.hasMatch(content)) {
         content = content.replaceFirstMapped(appLabelRegex, (match) {
           return '${match.group(1)}android:label="@string/app_name"';
         });
 
+        // 👈 أضفنا عملية أخذ نسخة احتياطية قبل التعديل
+        Utils.backupFile(manifest.path);
+
         manifest.writeAsStringSync(content);
         print('\x1B[32m✅ AndroidManifest.xml updated successfully!\x1B[0m');
       } else {
-        print(
-          '\x1B[31m❌ Could not find android:label in <application> tag to replace. Please do it manually.\x1B[0m',
-        );
+        print('\x1B[31m❌ Could not find android:label in <application> tag to replace. Please do it manually.\x1B[0m');
       }
     } else {
-      print(
-        '\x1B[32m✅ AndroidManifest.xml is already configured correctly.\x1B[0m',
-      );
+      print('\x1B[32m✅ AndroidManifest.xml is already configured correctly.\x1B[0m');
     }
   }
 
@@ -82,10 +78,7 @@ class AndroidProcessor {
 
         // Update existing app_name or append it to the resources
         if (regex.hasMatch(currentContent)) {
-          newContent = currentContent.replaceFirst(
-            regex,
-            '<string name="app_name">$name</string>',
-          );
+          newContent = currentContent.replaceFirst(regex, '<string name="app_name">$name</string>');
         } else {
           newContent = currentContent.replaceFirst(
             '</resources>',
@@ -101,8 +94,32 @@ class AndroidProcessor {
 </resources>''';
       }
 
+      // 👈 أضفنا عملية أخذ نسخة احتياطية قبل التعديل
+      Utils.backupFile(stringsFile.path);
+
       stringsFile.writeAsStringSync(newContent);
       print("   ✅ Updated: $folderName/strings.xml");
     });
+  }
+
+  /// Reverts all localization changes made to the Android project.
+  ///
+  /// This method restores the `AndroidManifest.xml` and all generated
+  /// `strings.xml` files from their `.bak` backups using the [config] map
+  /// to locate the language-specific directories.
+  static void revert(Map<String, String> config) {
+    print("⏪ Reverting Android changes...");
+
+    // 1. Restore the AndroidManifest.xml
+    Utils.restoreBackup('android/app/src/main/AndroidManifest.xml');
+
+    // 2. Restore each strings.xml file generated for the languages
+    final String resPath = 'android/app/src/main/res';
+    config.forEach((lang, name) {
+      String folderName = lang == 'en' ? 'values' : 'values-$lang';
+      Utils.restoreBackup('$resPath/$folderName/strings.xml');
+    });
+
+    print("   ✅ Android revert complete.");
   }
 }

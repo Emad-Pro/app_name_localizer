@@ -11,7 +11,9 @@ No more manual editing of `AndroidManifest.xml`, `strings.xml`, `Info.plist`, or
 * 🤖 **Smart Android Automation:** Automatically updates `AndroidManifest.xml` (safely targets only the `<application>` tag) and generates `strings.xml` for all defined languages.
 * 🍎 **Smart iOS Automation:** Intelligently configures `Info.plist` (enables `LSHasLocalizedDisplayName`), registers language variants, and seamlessly injects `InfoPlist.strings` into your Xcode `project.pbxproj`.
 * 🛡️ **Built-in Safety (Auto-Backups):** Before touching critical files like your iOS `.pbxproj`, the tool automatically creates a backup so you never lose your data in case of unexpected errors.
-* 💻 **Interactive CLI:** Choose to update Android only, iOS only, or both using a beautiful, interactive terminal menu.
+* ⏪ **Safe Revert System:** Made a mistake or changed your mind? Easily restore all original files from backups with a single command or via the interactive menu.
+* 🧹 **Workspace Cleanup:** Keep your repository clean! Safely delete all generated `.bak` files once you are satisfied with the changes.
+* 💻 **Interactive CLI:** Choose to update, revert, or clean Android only, iOS only, or both using a beautiful, interactive terminal menu with safety confirmations.
 * ⚡ **CI/CD Ready:** Use terminal flags (`-a` for Android, `-i` for iOS) to bypass the interactive menu for automated pipelines.
 * 🎨 **Beautiful Logs:** Enjoy a premium developer experience with colorful, formatted console logs and clear error handling.
 
@@ -25,7 +27,7 @@ Add the package to your `dev_dependencies` in your `pubspec.yaml` file:
 
 ```yaml
 dev_dependencies:
-  app_name_localizer: ^1.1.0
+  app_name_localizer: ^1.2.0
 ```
 
 Or simply run:
@@ -49,18 +51,25 @@ app_name_localizer:
 
 ## 🛠️ Usage
 
-Open your terminal and run the following command from the root of your Flutter project:
+Open your terminal and run the following command from the root of your Flutter project to launch the interactive menu:
 
 ```bash
 dart run app_name_localizer
 ```
 
 ### Fast CLI Flags
-If you want to target a specific platform directly (useful for scripts or CI/CD):
+If you want to execute operations directly (useful for scripts, power users, or CI/CD):
 
-* **Android Only:** `dart run app_name_localizer -a`
-* **iOS Only:** `dart run app_name_localizer -i`
+* **Target Android Only:** `dart run app_name_localizer -a`
+* **Target iOS Only:** `dart run app_name_localizer -i`
+* **Revert Changes:** `dart run app_name_localizer -r` (Restores backups)
+* **Clean Backups:** `dart run app_name_localizer -c` (Deletes `.bak` files)
 * **Help:** `dart run app_name_localizer -h`
+
+**💡 Pro Tip (Combining Flags):**
+You can combine flags to perform highly specific operations!
+* Revert Android only: `dart run app_name_localizer -r -a`
+* Clean iOS backups only: `dart run app_name_localizer -c -i`
 
 ---
 
