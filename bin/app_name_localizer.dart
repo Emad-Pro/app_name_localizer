@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:app_name_localizer/src/config_reader.dart';
 import 'package:app_name_localizer/src/android_processor.dart';
 import 'package:app_name_localizer/src/ios_processor.dart';
+import 'package:app_name_localizer/src/macos_processor.dart';
 import 'package:app_name_localizer/src/utils.dart';
 import 'package:app_name_localizer/src/version_reader.dart';
 
@@ -11,7 +12,7 @@ import 'package:app_name_localizer/src/version_reader.dart';
 /// 1. Handling CLI arguments and flags.
 /// 2. Loading the configuration from `pubspec.yaml`.
 /// 3. Determining the target platform through flags or interactive menu.
-/// 4. Executing the Android and iOS processors.
+/// 4. Executing the supported processors.
 ///
 /// Run this using: `dart run app_name_localizer`
 Future<void> main(List<String> args) async {
@@ -28,17 +29,30 @@ Future<void> main(List<String> args) async {
     return;
   }
 
+  // 1.4 Handle Coming Soon Flags
+  if (args.contains('-l') ||
+      args.contains('--linux') ||
+      args.contains('-w') ||
+      args.contains('--windows') ||
+      args.contains('--web')) {
+    Utils.log("\n🚀 This platform is Coming Soon! Stay tuned for the next updates.", success: true);
+    return;
+  }
+
   // 1.5 Handle Revert Flag
   if (args.contains('-r') || args.contains('--revert')) {
     bool revAndroid = args.contains('-a') || args.contains('--android');
     bool revIos = args.contains('-i') || args.contains('--ios');
+    bool revMacos = args.contains('-m') || args.contains('--macos');
 
-    if (!revAndroid && !revIos) {
+    // If no specific platform flag is passed with -r, revert all supported by default
+    if (!revAndroid && !revIos && !revMacos) {
       revAndroid = true;
       revIos = true;
+      revMacos = true;
     }
 
-    _executeRevert(revertAndroid: revAndroid, revertIos: revIos);
+    _executeRevert(revertAndroid: revAndroid, revertIos: revIos, revertMacos: revMacos);
     return;
   }
 
@@ -46,13 +60,16 @@ Future<void> main(List<String> args) async {
   if (args.contains('-c') || args.contains('--clean')) {
     bool clnAndroid = args.contains('-a') || args.contains('--android');
     bool clnIos = args.contains('-i') || args.contains('--ios');
+    bool clnMacos = args.contains('-m') || args.contains('--macos');
 
-    if (!clnAndroid && !clnIos) {
+    // If no specific platform flag is passed with -c, clean all supported by default
+    if (!clnAndroid && !clnIos && !clnMacos) {
       clnAndroid = true;
       clnIos = true;
+      clnMacos = true;
     }
 
-    _executeClean(cleanAndroid: clnAndroid, cleanIos: clnIos);
+    _executeClean(cleanAndroid: clnAndroid, cleanIos: clnIos, cleanMacos: clnMacos);
     return;
   }
 
@@ -60,7 +77,7 @@ Future<void> main(List<String> args) async {
   print("\n");
   Utils.log("╔══════════════════════════════════════════════╗");
   Utils.log("║    🌍 App Name Localizer Pro v$currentVersion          ║");
-  Utils.log("║    👨‍💻 Developed with ❤️ by Emad Younis (EY)  ║");
+  Utils.log("║    👨‍💻 Developed with ❤️ by Emad Younis (EA)  ║");
   Utils.log("╚══════════════════════════════════════════════╝");
   print("");
 
@@ -79,103 +96,138 @@ Future<void> main(List<String> args) async {
     _printSeparator();
 
     // 3. Determine Target Platforms (Logic Unit)
-    bool processAndroid = true;
-    bool processIos = true;
+    bool processAndroid = false;
+    bool processIos = false;
+    bool processMacos = false;
 
     // Check for platform-specific flags
-    if (args.contains('-a') || args.contains('--android')) {
-      Utils.log("🚀 Mode: Android Only (detected via flags)");
-      processIos = false;
-    } else if (args.contains('-i') || args.contains('--ios')) {
-      Utils.log("🚀 Mode: iOS Only (detected via flags)");
-      processAndroid = false;
+    if (args.contains('-a') ||
+        args.contains('--android') ||
+        args.contains('-i') ||
+        args.contains('--ios') ||
+        args.contains('-m') ||
+        args.contains('--macos')) {
+      if (args.contains('-a') || args.contains('--android')) {
+        Utils.log("🚀 Target: Android (detected via flags)");
+        processAndroid = true;
+      }
+      if (args.contains('-i') || args.contains('--ios')) {
+        Utils.log("🚀 Target: iOS (detected via flags)");
+        processIos = true;
+      }
+      if (args.contains('-m') || args.contains('--macos')) {
+        Utils.log("🚀 Target: macOS (detected via flags)");
+        processMacos = true;
+      }
     } else {
       // Interactive mode: Prompt the user to choose operations manually
       Utils.log("❓ Which operation would you like to perform?");
       Utils.log("   [1] Update Android only");
       Utils.log("   [2] Update iOS only");
-      Utils.log("   [3] Update Both Android & iOS");
-      Utils.log("   [4] ⏪ Revert previous changes (Restore Backups)");
-      Utils.log("   [5] 🧹 Clean backup files (Delete .bak files)");
+      Utils.log("   [3] Update macOS only");
+      Utils.log("   [4] Update Linux only (Coming Soon ⏳)");
+      Utils.log("   [5] Update Windows only (Coming Soon ⏳)");
+      Utils.log("   [6] Update Web only (Coming Soon ⏳)");
+      Utils.log("   [7] Update All Supported Platforms");
+      Utils.log("   [8] ⏪ Revert previous changes (Restore Backups)");
+      Utils.log("   [9] 🧹 Clean backup files (Delete .bak files)");
 
-      String answer = Utils.askUser("👉 Select an option (1/2/3/4/5):").trim();
+      String answer = Utils.askUser("👉 Select an option (1-9):").trim();
 
       switch (answer) {
         case "1":
-          processIos = false;
+          processAndroid = true;
           break;
         case "2":
-          processAndroid = false;
-          break;
-        case "3":
-          processAndroid = true;
           processIos = true;
           break;
+        case "3":
+          processMacos = true;
+          break;
         case "4":
+        case "5":
+        case "6":
+          Utils.log("\n🚀 This platform is Coming Soon! We are working hard to bring it to you.", success: true);
+          exit(0);
+        case "7":
+          processAndroid = true;
+          processIos = true;
+          processMacos = true;
+          break;
+        case "8":
           // Sub-menu for Revert Option
           Utils.log("\n❓ Which platform(s) would you like to revert?");
           Utils.log("   [1] Revert Android only");
           Utils.log("   [2] Revert iOS only");
-          Utils.log("   [3] Revert Both");
+          Utils.log("   [3] Revert macOS only");
+          Utils.log("   [4] Revert All Supported Platforms");
 
-          // إزالة defaultValue لمنع الإدخال الفارغ
-          String revertAnswer = Utils.askUser("👉 Select an option (1/2/3):").trim();
+          String revertAnswer = Utils.askUser("👉 Select an option (1-4):").trim();
 
-          bool revAndroid = true;
-          bool revIos = true;
+          bool revAndroid = false;
+          bool revIos = false;
+          bool revMacos = false;
 
           switch (revertAnswer) {
             case "1":
-              revIos = false;
+              revAndroid = true;
               break;
             case "2":
-              revAndroid = false;
+              revIos = true;
               break;
             case "3":
+              revMacos = true;
+              break;
+            case "4":
+              revAndroid = true;
+              revIos = true;
+              revMacos = true;
               break;
             default:
-              // سيتم التقاط الـ Enter الفارغ هنا
-              Utils.log("\n❌ Invalid input: '$revertAnswer'. Please select 1, 2, or 3.", error: true);
-              Utils.log("🚫 Operation aborted. No changes were made.");
+              Utils.log("\n❌ Invalid input: '$revertAnswer'.", error: true);
               exit(1);
           }
-          _executeRevert(revertAndroid: revAndroid, revertIos: revIos);
+          _executeRevert(revertAndroid: revAndroid, revertIos: revIos, revertMacos: revMacos);
           return;
 
-        case "5":
+        case "9":
           // Sub-menu for Clean Option
           Utils.log("\n❓ Which platform's backups would you like to clean?");
           Utils.log("   [1] Clean Android only");
           Utils.log("   [2] Clean iOS only");
-          Utils.log("   [3] Clean Both");
+          Utils.log("   [3] Clean macOS only");
+          Utils.log("   [4] Clean All Supported Platforms");
 
-          // إزالة defaultValue لمنع الإدخال الفارغ
-          String cleanAnswer = Utils.askUser("👉 Select an option (1/2/3):").trim();
+          String cleanAnswer = Utils.askUser("👉 Select an option (1-4):").trim();
 
-          bool clnAndroid = true;
-          bool clnIos = true;
+          bool clnAndroid = false;
+          bool clnIos = false;
+          bool clnMacos = false;
 
           switch (cleanAnswer) {
             case "1":
-              clnIos = false;
+              clnAndroid = true;
               break;
             case "2":
-              clnAndroid = false;
+              clnIos = true;
               break;
             case "3":
+              clnMacos = true;
+              break;
+            case "4":
+              clnAndroid = true;
+              clnIos = true;
+              clnMacos = true;
               break;
             default:
-              // سيتم التقاط الـ Enter الفارغ هنا
-              Utils.log("\n❌ Invalid input: '$cleanAnswer'. Please select 1, 2, or 3.", error: true);
-              Utils.log("🚫 Operation aborted. No changes were made.");
+              Utils.log("\n❌ Invalid input: '$cleanAnswer'.", error: true);
               exit(1);
           }
-          _executeClean(cleanAndroid: clnAndroid, cleanIos: clnIos);
+          _executeClean(cleanAndroid: clnAndroid, cleanIos: clnIos, cleanMacos: clnMacos);
           return;
 
         default:
-          Utils.log("\n❌ Invalid input: '$answer'. Please select 1, 2, 3, 4, or 5.", error: true);
-          Utils.log("🚫 Operation aborted. No changes were made.");
+          Utils.log("\n❌ Invalid input: '$answer'. Please select a valid option.", error: true);
           exit(1);
       }
     }
@@ -188,26 +240,27 @@ Future<void> main(List<String> args) async {
       AndroidProcessor.process(config);
       AndroidProcessor.validateManifest();
       Utils.log("✅ Android localization complete.", success: true);
-    } else {
-      Utils.log("⏩ Skipping Android...", success: false);
+      _printSeparator();
     }
-
-    _printSeparator();
 
     // 5. Execute iOS Localization
     if (processIos) {
       Utils.log("⚙️  Processing iOS...", success: false);
       IosProcessor.process(config);
       Utils.log("✅ iOS localization complete.", success: true);
-    } else {
-      Utils.log("⏩ Skipping iOS...", success: false);
+      _printSeparator();
     }
 
-    _printSeparator();
+    // 6. Execute macOS Localization
+    if (processMacos) {
+      Utils.log("⚙️  Processing macOS...", success: false);
+      MacosProcessor.process(config);
+      Utils.log("✅ macOS localization complete.", success: true);
+      _printSeparator();
+    }
 
-    // 6. Success Banner and instructions
+    // 7. Success Banner
     Utils.log("🎉 SUCCESS! App names localized successfully.", success: true);
-    Utils.log("👉 Next Step: Run 'flutter clean' && 'flutter run'");
     print("\n");
   } catch (e) {
     Utils.log("\n💥 Fatal Error: $e", error: true);
@@ -216,7 +269,7 @@ Future<void> main(List<String> args) async {
 }
 
 /// Helper method to execute the revert process.
-void _executeRevert({bool revertAndroid = true, bool revertIos = true}) {
+void _executeRevert({bool revertAndroid = false, bool revertIos = false, bool revertMacos = false}) {
   Utils.log("\n⏪ Initiating Revert Process...", success: false);
 
   if (revertAndroid) {
@@ -230,19 +283,17 @@ void _executeRevert({bool revertAndroid = true, bool revertIos = true}) {
     }
   }
 
-  if (revertIos) {
-    IosProcessor.revert();
-  }
+  if (revertIos) IosProcessor.revert();
+  if (revertMacos) MacosProcessor.revert();
 
   Utils.log("✅ Revert operation completed successfully.", success: true);
   exit(0);
 }
 
 /// Helper method to clean (delete) `.bak` files with confirmation.
-void _executeClean({bool cleanAndroid = true, bool cleanIos = true}) {
+void _executeClean({bool cleanAndroid = false, bool cleanIos = false, bool cleanMacos = false}) {
   Utils.log("\n🧹 Preparing to clean backup files (.bak)...", success: false);
 
-  // طلب التأكيد من المستخدم
   String confirm = Utils.askUser(
     "⚠️ Are you sure you want to permanently delete the selected backup files? (y/n):",
   ).trim().toLowerCase();
@@ -275,6 +326,11 @@ void _executeClean({bool cleanAndroid = true, bool cleanIos = true}) {
     filesToDelete.add('ios/Runner/Info.plist.bak');
   }
 
+  if (cleanMacos) {
+    filesToDelete.add('macos/Runner.xcodeproj/project.pbxproj.bak');
+    filesToDelete.add('macos/Runner/Info.plist.bak');
+  }
+
   int deletedCount = 0;
   for (String path in filesToDelete) {
     File file = File(path);
@@ -301,18 +357,19 @@ void _printSeparator() {
 /// Helper method to display CLI usage instructions and developer credits.
 void _printHelp(String version) {
   print("\n🌍 App Name Localizer Pro v$version");
-  print("👨‍💻 Developed by Emad Younis (EY) | ✉️ emadeadev@gmail.com\n");
-  print("A powerful tool to easily localize your Flutter app name for iOS and Android.\n");
+  print("👨‍💻 Developed by Emad Younis (EA) | ✉️ emadeadev@gmail.com\n");
+  print("A powerful tool to easily localize your Flutter app name for multiple platforms.\n");
   print("Usage: dart run app_name_localizer [arguments]\n");
   print("Options:");
-  print("  -a, --android    Target Android only.");
-  print("  -i, --ios        Target iOS only.");
+  print("  -a, --android    Target Android");
+  print("  -i, --ios        Target iOS");
+  print("  -m, --macos      Target macOS");
+  print("  -l, --linux      Target Linux (Coming Soon)");
+  print("  -w, --windows    Target Windows (Coming Soon)");
+  print("      --web        Target Web (Coming Soon)");
   print("  -r, --revert     Revert changes and restore original files from backups.");
   print("  -c, --clean      Delete all .bak (backup) files created by the tool.");
   print("  -h, --help       Show this help message.");
   print("  -v, --version    Print the version number.");
-  print("\nExamples:");
-  print("  dart run app_name_localizer -r        (Reverts both Android and iOS)");
-  print("  dart run app_name_localizer -c -a     (Cleans Android backups only)");
   print("\nFor more information, visit the documentation on pub.dev.\n");
 }
