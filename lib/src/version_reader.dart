@@ -35,11 +35,11 @@ class VersionReader {
         }
       }
     } catch (e) {
-      return '1.0.4';
+      return '1.0.5';
       // If resolution fails (e.g., during local development without pub get),
       // the error is caught to prevent the CLI from crashing.
     }
 
-    return '1.0.4'; // Fallback version (Update this whenever you bump version)
+    return '1.0.5'; // Fallback version (Update this whenever you bump version)
   }
 }

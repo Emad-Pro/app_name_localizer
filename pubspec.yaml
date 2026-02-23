@@ -1,6 +1,6 @@
 name: app_name_localizer
 description: A powerful CLI tool to easily and automatically localize your Flutter app name for iOS and Android without manual configuration.
-version: 1.0.4
+version: 1.0.5
 
 platforms:
   android:
