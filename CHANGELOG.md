@@ -31,3 +31,10 @@
 * 🎯 **Enhancement (Targeted Operations):** You can now target specific platforms for revert and clean operations (e.g., `dart run app_name_localizer -r -a` to revert Android only).
 * 🛡️ **Enhancement (Interactive CLI):** Improved the interactive menu UX by removing default empty inputs to prevent accidental executions and added intuitive sub-menus for advanced options.
 * 📖 **Documentation:** Updated CLI `--help` command with practical examples for the new flags.
+
+## 1.0.4
+
+* 🍏 **Feature (macOS Support):** Fully automated app name localization for macOS! The tool now automatically generates `InfoPlist.strings`, configures `Info.plist`, and seamlessly updates your macOS Xcode `project.pbxproj`.
+* 🛡️ **Enhanced Revert & Clean:** The revert (`-r`) and clean (`-c`) operations now fully support macOS backups.
+* 🗺️ **Roadmap Preview:** Added "Coming Soon" placeholders in the interactive menu and CLI help for Linux, Windows, and Web platforms. Stay tuned!
+* 💻 **Interactive CLI:** Expanded the main menu to handle 9 dynamic options with seamless platform targeting.
