@@ -38,3 +38,6 @@
 * 🛡️ **Enhanced Revert & Clean:** The revert (`-r`) and clean (`-c`) operations now fully support macOS backups.
 * 🗺️ **Roadmap Preview:** Added "Coming Soon" placeholders in the interactive menu and CLI help for Linux, Windows, and Web platforms. Stay tuned!
 * 💻 **Interactive CLI:** Expanded the main menu to handle 9 dynamic options with seamless platform targeting.
+
+## 1.0.5
+* 🛠️ **Fix:** Some Problem in Code.
